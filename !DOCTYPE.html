@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>elfgodness | Dev - @xcveoc | Terminal</title>
+    
+    <!-- Подключение Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифт Inter для чистого современного вида -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Основной бело-черный цвет */
+        :root {
+            --color-primary: #ffffff; /* Белый/Светло-серый для свечения и границ */
+            --color-secondary: #e0e0e0; /* Более мягкий белый для текста */
+            --color-dark: #000000; /* Черный фон */
+            --color-error: #ff0000; /* Красный для ошибок */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Базовый фон теперь чисто черный */
+        .bg-custom {
+            background-color: var(--color-dark); 
+            min-height: 100vh;
+            display: flex;
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Стиль для неонового блока (карточки) */
+        .neon-card {
+            background-color: rgba(20, 20, 20, 0.9); /* Очень темный, почти черный фон */
+            border: 1px solid var(--color-primary); 
+            /* Белое свечение */
+            box-shadow: 0 0 15px var(--color-primary), inset 0 0 8px var(--color-primary); 
+            transition: all 0.3s ease-in-out;
+            backdrop-filter: blur(2px);
+            position: relative;
+            z-index: 10;
+        }
+        .neon-card:hover {
+            box-shadow: 0 0 25px var(--color-secondary), inset 0 0 12px var(--color-secondary); 
+            transform: translateY(-3px);
+        }
+
+        /* Эффект мерцания для текста */
+        .neon-text {
+            text-shadow: 0 0 3px var(--color-secondary), 0 0 8px var(--color-primary);
+        }
+
+        /* Анимация вращения для аватара */
+        @keyframes spin {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+        .avatar-spin {
+            animation: spin 15s linear infinite;
+        }
+
+        /* Стиль для лоадера */
+        .loader {
+            display: inline-block;
+            width: 1em;
+            overflow: hidden;
+            vertical-align: bottom;
+            animation: loading-text 1s step-end infinite;
+            color: var(--color-secondary);
+        }
+        @keyframes loading-text {
+            0% { width: 0; }
+            25% { width: .3em; }
+            50% { width: .6em; }
+            75% { width: .9em; }
+            100% { width: 1em; }
+        }
+
+        /* Стили для нижней командной панели */
+        .command-panel {
+            background-color: rgba(10, 10, 10, 0.95); /* Темный фон */
+            border-top: 2px solid var(--color-primary);
+            box-shadow: 0 -5px 15px rgba(255, 255, 255, 0.5); /* Белое свечение */
+            transition: height 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            height: 50px; /* Свернутое состояние */
+        }
+        .command-panel.expanded {
+            height: 250px; /* Развернутое состояние */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Основной контейнер с черным фоном --><div class="bg-custom">
+
+        <!-- Контейнер для всего содержимого --><div class="z-10 w-full max-w-4xl p-4 md:p-8 flex flex-col items-center justify-center">
+
+            <!-- Центральный блок - Аватар и Заголовок -->
+            <div class="mb-10 text-center">
+                
+                <!-- Анимированный Аватар (Светящийся Белый) -->
+                <div class="w-40 h-40 md:w-56 md:h-56 mx-auto rounded-full p-2 border-4 border-transparent avatar-spin" 
+                     style="box-shadow: 0 0 25px var(--color-primary); background-color: rgba(255, 255, 255, 0.05);">
+                    <img 
+                        src="https://placehold.co/224x224/000000/ffffff?text=E" 
+                        alt="Abstract Neon Avatar" 
+                        class="w-full h-full object-cover rounded-full opacity-90"
+                    />
+                </div>
+                
+                <h1 class="text-5xl md:text-6xl font-bold mt-6 tracking-wider uppercase text-white neon-text">
+                    elfgodness
+                </h1>
+                
+                <!-- Главный Статус (Обновляется LLM) -->
+                <p id="status-display" class="text-xl md:text-2xl mt-2 text-gray-300 neon-text">
+                    Dev - elfgodness. Делаем анонимность легче и доступнее.
+                </p>
+            </div>
+
+            <!-- Лента Контента (Окно с динамическими данными) -->
+            <div class="w-full neon-card p-6 rounded-lg">
+                <h2 class="text-2xl font-bold mb-4 text-white border-b border-gray-600 pb-2 neon-text">
+                    [ACTIVITY LOG]
+                </h2>
+                
+                <!-- Контейнер для отображения логов и данных -->
+                <div class="h-48 overflow-y-auto text-sm text-gray-300" id="activity-log">
+                    <pre class="font-mono">
+[00:01:22] System check: Protocol <span class="text-white">V3.1</span> loaded.
+[00:01:25] Network status: <span class="text-green-500">Secured</span>. Connection: <span class="text-white">Stable</span>.
+[00:01:30] Developer alias: <span class="text-white">@xcveoc</span> authorized.
+[00:01:33] Mission: Anonymity accessibility <span class="text-white">PRIORITY 1</span>.
+[00:01:35] <span class="text-red-500">WARNING:</span> External connection attempts detected. Status: <span class="text-green-500">Ignored</span>.
+[00:01:40] <span class="text-white">EF-CORE:</span> Ready for status generation. Use command panel. Type <span class="text-white">'start'</span> for help.
+[00:01:45] Log cleared. Waiting for input...
+                    </pre>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Нижняя панель командной строки (Сворачиваемая) -->
+        <div id="command-panel" class="command-panel fixed bottom-0 left-0 w-full z-20">
+            <div class="max-w-7xl mx-auto px-4 md:px-8">
+                
+                <!-- Свернутое состояние (Заголовок) -->
+                <div id="command-header" class="flex items-center justify-between h-[50px] cursor-pointer" onclick="toggleCommandPanel()">
+                    <span class="text-white font-mono text-lg neon-text">
+                        &gt; SYSTEM_COMMAND_INPUT
+                    </span>
+                    <button class="text-white text-3xl leading-none transition-transform duration-300" id="toggle-icon">
+                        +
+                    </button>
+                </div>
+                
+                <!-- Развернутое состояние (Интерфейс LLM) -->
+                <div id="command-content" class="h-[200px] pt-4 overflow-y-hidden hidden">
+                    <div class="text-gray-300 text-sm mb-2">
+                        Введите команду (start, link) или идею для криптичного статуса:
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <span class="text-white font-bold text-lg font-mono">$ </span>
+                        <input type="text" id="user-prompt" placeholder="Введите команду или текст и нажмите Enter" class="text-lg bg-transparent border-b border-gray-500/50 text-white outline-none flex-grow ml-2 font-mono" onkeypress="handleInput(event)">
+                        <button onclick="checkAndExecuteCommand()" class="ml-4 px-4 py-1 bg-gray-800 hover:bg-gray-700 rounded-md text-white shadow-md transition-all">
+                            EXECUTE
+                        </button>
+                    </div>
+                    
+                    <div id="console-output" class="mt-4 text-sm text-gray-300 font-mono">
+                        <!-- Здесь будет выводиться лог генерации -->
+                        [CMD] Ожидание ввода...
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+    
+    <script>
+        // Глобальные переменные API
+        const API_KEY = ""; 
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+        
+        const outputElement = document.getElementById('console-output');
+        const promptInput = document.getElementById('user-prompt');
+        const statusDisplay = document.getElementById('status-display');
+        const activityLog = document.getElementById('activity-log').querySelector('pre');
+
+        // --- ЛОГИКА КОМАНДНОЙ ПАНЕЛИ ---
+        function toggleCommandPanel() {
+            const panel = document.getElementById('command-panel');
+            const icon = document.getElementById('toggle-icon');
+            const content = document.getElementById('command-content');
+
+            panel.classList.toggle('expanded');
+            
+            if (panel.classList.contains('expanded')) {
+                icon.innerText = '−'; // Минус (свернуть)
+                content.classList.remove('hidden');
+                promptInput.focus();
+            } else {
+                icon.innerText = '+'; // Плюс (развернуть)
+                // Не скрываем сразу, даем CSS-переходу по высоте завершиться
+                setTimeout(() => {
+                    if (!panel.classList.contains('expanded')) {
+                        content.classList.add('hidden');
+                    }
+                }, 300);
+            }
+        }
+
+        // --- ЛОГИКА ОБРАБОТКИ КОМАНД (start, link) И LLM-ЗАПРОСОВ ---
+        function checkAndExecuteCommand() {
+            const userQuery = promptInput.value.trim().toLowerCase();
+            
+            if (!userQuery) {
+                appendOutput("[ERROR] Введите команду или текст.", 'text-red-500');
+                return;
+            }
+            
+            // 1. Проверка встроенных команд
+            if (userQuery === 'start') {
+                appendOutput("$ start");
+                appendOutput("//: Welcome, authorized user. EF-CORE System Online. Access Protocol: Active. Type 'link' to retrieve identity coordinates.", 'text-white');
+                promptInput.value = '';
+                return;
+            }
+
+            if (userQuery === 'link') {
+                appendOutput("$ link");
+                appendOutput("[LINK] Target coordinates retrieved: https://xcveoc.t.me", 'text-white');
+                promptInput.value = '';
+                return;
+            }
+
+            // 2. Если не команда, то это запрос LLM
+            generateStatus();
+        }
+
+        function handleInput(event) {
+            if (event.key === 'Enter') {
+                checkAndExecuteCommand();
+            }
+        }
+
+        // --- ЛОГИКА ГЕНЕРАЦИИ СТАТУСА (LLM) ---
+        async function generateStatus() {
+            const userQuery = promptInput.value.trim();
+            
+            // Если запрос LLM пуст, но пользователь нажал Execute
+            if (!userQuery) {
+                appendOutput("[ERROR] Введите текст для генерации.", 'text-red-500');
+                return;
+            }
+            
+            appendOutput(`$ generate_status "${userQuery}"...`);
+            
+            promptInput.value = ''; 
+            const loadingIndicator = document.createElement('span');
+            loadingIndicator.innerHTML = '<span class="loader">...</span> Генерация...';
+            outputElement.appendChild(loadingIndicator);
+            outputElement.scrollTop = outputElement.scrollHeight;
+
+            const systemPrompt = `
+                Вы — продвинутый ИИ-аналитик, который генерирует криптичные, технически звучащие или философские сообщения в стиле киберпанк/анонимность. 
+                Сообщение должно быть кратким (не более 15 слов) и использовать термины из кибербезопасности, анонимности, шифрования или цифрового мира. 
+                Цель - создать идеальный статус для профиля. 
+                Не используйте приветствий. Отвечайте только сгенерированным сообщением. 
+                Пример: "Protocol 7 established. Anonymity matrix online. Trust no one."
+                Генерируйте ответ на русском языке.
+            `;
+            
+            const payload = {
+                contents: [{ parts: [{ text: `Сгенерируй криптичный статус, основанный на идее: "${userQuery}"` }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                // Экспоненциальная задержка (Exponential Backoff)
+                const maxRetries = 3;
+                let attempt = 0;
+                let response;
+
+                while (attempt < maxRetries) {
+                    try {
+                        response = await fetch(`${API_URL}?key=${API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        if (response.status === 429) {
+                            attempt++;
+                            if (attempt < maxRetries) {
+                                const delay = Math.pow(2, attempt) * 1000;
+                                console.warn(`API Rate Limit. Retrying in ${delay / 1000}s...`);
+                                await new Promise(resolve => setTimeout(resolve, delay));
+                                continue;
+                            } else {
+                                throw new Error("API Rate Limit Exceeded after retries.");
+                            }
+                        }
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        break; // Успешный выход из цикла
+                    } catch (error) {
+                        attempt++;
+                        if (attempt < maxRetries) {
+                            const delay = Math.pow(2, attempt) * 1000;
+                            console.error(`Fetch error: ${error.message}. Retrying in ${delay / 1000}s...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                        } else {
+                            throw error; // Выбрасываем ошибку после всех попыток
+                        }
+                    }
+                }
+
+                loadingIndicator.remove();
+                
+                const result = await response.json();
+                const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text || "[[ERROR: Invalid API response]]";
+                
+                // Отображение результата в консоли
+                appendOutput(`[SUCCESS] Generated: ${generatedText}`, 'text-white');
+                
+                // Обновление главного статуса
+                statusDisplay.innerText = generatedText;
+
+                // Добавление в Activity Log
+                appendActivityLog(`[${getTimeStamp()}] STATUS_UPDATE: "${generatedText}"`);
+
+            } catch (error) {
+                loadingIndicator.remove();
+                console.error("LLM API Error:", error);
+                appendOutput(`[ERROR] Generation failed: ${error.message}.`, 'text-red-500');
+                appendActivityLog(`[${getTimeStamp()}] <span style="color:red">ERROR:</span> EF-CORE API failed.`);
+            }
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+
+        
+        function appendOutput(text, className = 'text-gray-300') {
+            const line = document.createElement('div');
+            line.className = 'font-mono text-sm ' + className;
+            line.innerText = text;
+            outputElement.appendChild(line);
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+
+        function appendActivityLog(htmlContent) {
+            const logElement = document.getElementById('activity-log').querySelector('pre');
+            const logLine = document.createElement('div');
+            logLine.className = 'font-mono';
+            logLine.innerHTML = htmlContent;
+            
+            // Добавляем элемент сверху, чтобы новые логи были видны
+            logElement.prepend(logLine);
+            // Удаляем старые, чтобы не перегружать
+            while (logElement.children.length > 20) {
+                logElement.removeChild(logElement.lastChild);
+            }
+        }
+
+        function getTimeStamp() {
+            const date = new Date();
+            return date.toTimeString().split(' ')[0];
+        }
+
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        window.onload = function() {
+            // Добавляем функциональность переключения панели на заголовок
+            const header = document.getElementById('command-header');
+            header.onclick = toggleCommandPanel; 
+        };
+
+    </script>
+    
+</body>
+</html>
